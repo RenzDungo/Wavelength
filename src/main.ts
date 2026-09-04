@@ -95,12 +95,20 @@ function renderGame() {
   app.querySelector('[data-action="copy"]')?.addEventListener('click', async () => { await navigator.clipboard?.writeText(state.code); const button = app.querySelector<HTMLButtonElement>('[data-action="copy"]'); if (button) button.textContent = '✓' })
 }
 
-const pinPalette = ['#e9783f', '#65a884', '#8db9b1', '#f0b18d', '#e89ba4', '#9cc9b4']
+const pinPalette = ['#999529', '#91b931', '#299992', '#3195b9', '#295699', '#313ab9', '#492999', '#8531b9', '#932999', '#b93193', '#992952', '#b93136']
+const scoringColors = ['#f2b38f', '#e9783f', '#65a884']
+const themeColors = ['#101614', '#eef3f0', '#173838', '#26312d', '#182220', '#9aa7a3', '#a9bdb6']
+const assignedPinColors = new Map<string, string>()
+const hexToRgb = (hex: string) => { const value = parseInt(hex.slice(1), 16); return [(value >> 16) & 255, (value >> 8) & 255, value & 255] }
+const colorDistance = (a: string, b: string) => { const [r1, g1, b1] = hexToRgb(a); const [r2, g2, b2] = hexToRgb(b); return Math.sqrt(2 * (r1 - r2) ** 2 + 4 * (g1 - g2) ** 2 + 3 * (b1 - b2) ** 2) }
+const hslToHex = (h: number, s: number, l: number) => { s /= 100; l /= 100; const k = (n: number) => (n + h / 30) % 12; const a = s * Math.min(l, 1 - l); const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))); const toHex = (x: number) => Math.round(255 * x).toString(16).padStart(2, '0'); return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}` }
+const randomDistinctColor = (forbidden: string[]) => { let best = ''; let bestMinDistance = -Infinity; for (let attempt = 0; attempt < 150; attempt++) { const candidate = hslToHex(Math.floor(Math.random() * 360), 55 + Math.random() * 15, 32 + Math.random() * 18); const minDistance = Math.min(...forbidden.map((color) => colorDistance(candidate, color))); if (minDistance > 65) return candidate; if (minDistance > bestMinDistance) { bestMinDistance = minDistance; best = candidate } } return best }
+const pinColorFor = (name: string, index: number) => { if (index < pinPalette.length) return pinPalette[index]!; if (assignedPinColors.has(name)) return assignedPinColors.get(name)!; const color = randomDistinctColor([...scoringColors, ...themeColors, ...pinPalette, ...assignedPinColors.values()]); assignedPinColors.set(name, color); return color }
 
 function renderRoundResults() {
   const activePlayer = state.players.find((player) => player.name === state.playerName)
   const guessEntries = Object.entries(state.guesses)
-  const pinLegend = guessEntries.map(([name, guessAngle], index) => `<div class="pin-legend-item"><span class="pin-dot" style="background:${pinPalette[index % pinPalette.length]}"></span>${escapeHtml(name)} — ${guessAngle}°</div>`).join('')
+  const pinLegend = guessEntries.map(([name, guessAngle], index) => `<div class="pin-legend-item"><span class="pin-dot" style="background:${pinColorFor(name, index)}"></span>${escapeHtml(name)} — ${guessAngle}°</div>`).join('')
   const playerRows = state.players.map((player) => { const guessAngle = state.guesses[player.name]; const guessLine = typeof guessAngle === 'number' ? `<small>${guessAngle}° · +${scoreForDistance(Math.abs(guessAngle - state.target))} pts</small>` : ''; return `<div class="score-player ${player.name === state.playerName ? 'active' : ''}"><span class="player-badge ${player.role === 'Psychic' ? 'host' : ''}">${escapeHtml(player.name.slice(0, 2).toUpperCase())}</span><div><strong>${escapeHtml(player.name)}</strong><small>${player.role.toUpperCase()}${player.name === state.playerName ? ' · YOU' : ''}</small>${guessLine}</div><b>${player.score}</b></div>` }).join('')
   const roundOfTotal = Math.min(state.totalRounds, Math.ceil(state.round / Math.max(1, state.players.length)))
   const myScore = activePlayer && activePlayer.role !== 'Psychic' ? scoreForDistance(Math.abs(state.guess - state.target)) : null
@@ -111,7 +119,7 @@ function renderRoundResults() {
     gameWheel.insertAdjacentHTML('afterbegin', '<div class="target-sector sector-one"></div><div class="target-sector sector-three-left"></div><div class="target-sector sector-five"></div><div class="target-sector sector-three-right"></div><div class="target-sector sector-one-right"></div>')
     configureTargetWheel(gameWheel, state.target)
     gameWheel.insertAdjacentHTML('beforeend', `<div class="needle target-answer-needle" style="transform:rotate(${state.target + 180}deg)"></div>`)
-    guessEntries.forEach(([, guessAngle], index) => { const color = pinPalette[index % pinPalette.length]; gameWheel.insertAdjacentHTML('beforeend', `<div class="guess-pin" style="transform:rotate(${guessAngle + 180}deg);background:${color}"><span class="guess-pin-dot" style="background:${color}"></span></div>`) })
+    guessEntries.forEach(([name, guessAngle], index) => { const color = pinColorFor(name, index); gameWheel.insertAdjacentHTML('beforeend', `<div class="guess-pin" style="transform:rotate(${guessAngle + 180}deg);background:${color}"><span class="guess-pin-dot" style="background:${color}"></span></div>`) })
   }
   app.querySelector('[data-action="next-round"]')?.addEventListener('click', () => { sendServer({ type: 'next_round', code: state.code }); state.guess = 90 })
   app.querySelector('[data-action="copy"]')?.addEventListener('click', async () => { await navigator.clipboard?.writeText(state.code); const button = app.querySelector<HTMLButtonElement>('[data-action="copy"]'); if (button) button.textContent = '✓' })
