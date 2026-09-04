@@ -2,7 +2,7 @@ services:
   wavelength:
     build: .
     ports:
-      - "3001:3001"
+      - "3100:3100"
     environment:
-      - PORT=3001
+      - PORT=3100
     restart: unless-stopped

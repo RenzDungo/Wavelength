@@ -33,7 +33,7 @@ function render() {
 }
 
 function frame(content: string, active = 'PLAY') {
-  app.innerHTML = `<div class="site-shell"><header class="topbar"><a class="brand" href="#" data-action="home"><span class="brand-mark">◒</span> wavelength</a><nav><a class="nav-active" href="#">${active}</a><a href="#">HOW IT WORKS</a></nav><div class="top-actions"><span class="online-dot"></span> 4 players online <button class="avatar">JD</button></div></header>${content}<footer><span>WAVELENGTH · 2026</span><span>MAKE A CONNECTION</span><span class="footer-dot"></span></footer></div>`
+  app.innerHTML = `<div class="site-shell"><header class="topbar"><a class="brand" href="#" data-action="home"><span class="brand-mark">◒</span> wavelength</a><nav><a class="nav-active" href="#">${active}</a><a href="#">HOW IT WORKS</a></nav></header>${content}<footer><span>WAVELENGTH · 2026</span><span>MAKE A CONNECTION</span><span class="footer-dot"></span></footer></div>`
   app.querySelectorAll<HTMLElement>('[data-action]').forEach((element) => element.addEventListener('click', (event) => { event.preventDefault(); if (element.dataset.action === 'home') { state.screen = 'welcome'; render() } }))
 }
 
@@ -86,7 +86,7 @@ function renderGame() {
   if (state.revealed) app.querySelector('.wheel-panel')?.insertAdjacentHTML('beforeend', '<button class="button button-primary next-round" data-action="next-round">NEXT ROUND <span>→</span></button>')
   const gameWheel = app.querySelector<HTMLElement>('.wheel')
   const gameBand = gameWheel?.querySelector('.band-1')
-  if (gameWheel && gameBand) { gameBand.remove(); gameWheel.style.background = activePlayer?.role === 'Psychic' || state.revealed ? '#f5f2ed' : '#f5f2ed'; if (activePlayer?.role === 'Psychic' || state.revealed) { gameWheel.insertAdjacentHTML('afterbegin', '<div class="target-sector sector-one"></div><div class="target-sector sector-three-left"></div><div class="target-sector sector-five"></div><div class="target-sector sector-three-right"></div><div class="target-sector sector-one-right"></div>'); configureTargetWheel(gameWheel, state.target) } }
+  if (gameWheel && gameBand) { gameBand.remove(); gameWheel.style.background = activePlayer?.role === 'Psychic' || state.revealed ? '#101614' : '#101614'; if (activePlayer?.role === 'Psychic' || state.revealed) { gameWheel.insertAdjacentHTML('afterbegin', '<div class="target-sector sector-one"></div><div class="target-sector sector-three-left"></div><div class="target-sector sector-five"></div><div class="target-sector sector-three-right"></div><div class="target-sector sector-one-right"></div>'); configureTargetWheel(gameWheel, state.target) } }
   const guessSlider = app.querySelector<HTMLInputElement>('#guess')
   guessSlider?.addEventListener('pointerdown', (event) => { draggingGuess = true; guessSlider.setPointerCapture(event.pointerId); guessSlider.classList.add('is-dragging') })
   guessSlider?.addEventListener('pointerup', (event) => { draggingGuess = false; if (guessSlider.hasPointerCapture(event.pointerId)) guessSlider.releasePointerCapture(event.pointerId); guessSlider.classList.remove('is-dragging') })
