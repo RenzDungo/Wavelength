@@ -63,7 +63,9 @@ websocketServer.on('connection', (socket) => {
     }
     if (message.type === 'reveal') {
       if (room.status !== 'guessing') return error(socket, 'The round is not ready to reveal')
-      Object.entries(room.guesses).forEach(([playerName, angle]) => { const player = room.players.find((item) => item.name === playerName); const distance = Math.abs(angle - room.target); const points = distance <= 5 ? 5 : distance <= 15 ? 3 : distance <= 25 ? 1 : 0; if (player) player.score += points })
+      let psychicPoints = 0
+      Object.entries(room.guesses).forEach(([playerName, angle]) => { const player = room.players.find((item) => item.name === playerName); if (!player || player.role !== 'Guessing') return; const distance = Math.abs(angle - room.target); const points = distance <= 5 ? 5 : distance <= 15 ? 3 : distance <= 25 ? 1 : 0; player.score += points; psychicPoints += points })
+      const psychic = room.players.find((item) => item.role === 'Psychic'); if (psychic) psychic.score += psychicPoints
       room.status = 'revealed'; broadcast(room)
     }
     if (message.type === 'next_round') {
