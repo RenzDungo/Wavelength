@@ -14,7 +14,7 @@ const state: { screen: GameState; playerName: string; category: string; left: st
 }
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]!)
 const scoreForDistance = (distance: number) => distance <= 5 ? 5 : distance <= 15 ? 3 : distance <= 25 ? 1 : 0
-const syncRoom = (room: Room) => { state.players = room.players; state.category = room.category; state.left = room.left; state.right = room.right; state.clue = room.clue; state.target = room.target ?? state.target; state.round = (room.round ?? 0) + 1; state.totalRounds = room.totalRounds ?? state.totalRounds; state.roomStatus = room.status ?? 'lobby'; state.guesses = room.guesses ?? {}; const currentGuess = room.guesses?.[state.playerName]; if (typeof currentGuess === 'number') state.guess = currentGuess }
+const syncRoom = (room: Room) => { state.players = room.players; const canonicalPlayer = room.players.find((player) => player.name.toLowerCase() === state.playerName.toLowerCase()); if (canonicalPlayer) state.playerName = canonicalPlayer.name; state.category = room.category; state.left = room.left; state.right = room.right; state.clue = room.clue; state.target = room.target ?? state.target; state.round = (room.round ?? 0) + 1; state.totalRounds = room.totalRounds ?? state.totalRounds; state.roomStatus = room.status ?? 'lobby'; state.guesses = room.guesses ?? {}; const currentGuess = room.guesses?.[state.playerName]; if (typeof currentGuess === 'number') state.guess = currentGuess }
 let socket: WebSocket | null = null
 let draggingGuess = false
 const queuedMessages: Record<string, unknown>[] = []
