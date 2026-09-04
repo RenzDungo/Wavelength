@@ -4,7 +4,7 @@ import './wheel-180.css'
 import './guessing-wheel.css'
 import './game-polish.css'
 import './final-scores.css'
-type GameState = 'welcome' | 'host' | 'join' | 'lobby' | 'playing'
+type GameState = 'welcome' | 'host' | 'join' | 'lobby' | 'playing' | 'how-it-works'
 type Player = { name: string; score: number; role: 'Psychic' | 'Guessing' | 'Waiting' }
 type Room = { code: string; players: Player[]; category: string; left: string; right: string; clue: string; target: number | null; status?: 'lobby' | 'psychic_setup' | 'guessing' | 'revealed' | 'finished'; guesses?: Record<string, number>; round?: number; totalRounds?: number }
 
@@ -31,17 +31,26 @@ function render() {
   if (state.screen === 'join') renderJoin()
   if (state.screen === 'lobby') renderLobby()
   if (state.screen === 'playing') renderGame()
+  if (state.screen === 'how-it-works') renderHowItWorks()
 }
 
 function frame(content: string, active = 'PLAY') {
-  app.innerHTML = `<div class="site-shell"><header class="topbar"><a class="brand" href="#" data-action="home"><span class="brand-mark">◒</span> wavelength</a><nav><a class="nav-active" href="#">${active}</a><a href="#">HOW IT WORKS</a></nav></header>${content}<footer><span>WAVELENGTH · 2026</span><span>MAKE A CONNECTION</span><span class="footer-dot"></span></footer></div>`
-  app.querySelectorAll<HTMLElement>('[data-action]').forEach((element) => element.addEventListener('click', (event) => { event.preventDefault(); if (element.dataset.action === 'home') { state.screen = 'welcome'; render() } }))
+  const onHowItWorks = active === 'HOW IT WORKS'
+  const navHtml = onHowItWorks
+    ? `<a href="#" data-action="home">PLAY</a><a class="nav-active" href="#">HOW IT WORKS</a>`
+    : `<a class="nav-active" href="#">${active}</a><a href="#" data-action="how-it-works">HOW IT WORKS</a>`
+  app.innerHTML = `<div class="site-shell"><header class="topbar"><a class="brand" href="#" data-action="home"><span class="brand-mark">◒</span> wavelength</a><nav>${navHtml}</nav></header>${content}<footer><span>WAVELENGTH · 2026</span><span>MAKE A CONNECTION</span><span class="footer-dot"></span></footer></div>`
+  app.querySelectorAll<HTMLElement>('[data-action]').forEach((element) => element.addEventListener('click', (event) => { event.preventDefault(); if (element.dataset.action === 'home') { state.screen = 'welcome'; render() } if (element.dataset.action === 'how-it-works') { state.screen = 'how-it-works'; render() } }))
 }
 
 function renderWelcome() {
   frame(`<main class="welcome"><section class="welcome-copy"><p class="eyebrow">A SOCIAL GUESSING GAME</p><h1>Find the<br><em>wavelength.</em></h1><p class="intro">Read the room. Place your guess. See how close you really are.</p><div class="welcome-actions"><button class="button button-primary" data-action="new">NEW GAME <span>→</span></button><button class="button button-ghost" data-action="join">JOIN A GAME <span>+</span></button></div><p class="hint">No account needed · Just a room code</p></section><section class="signal-art" aria-label="Abstract wavelength illustration"><div class="ring ring-one"></div><div class="ring ring-two"></div><div class="ring ring-three"></div><div class="signal-line"></div><div class="target-pin"></div><span class="art-label label-left">LOW SIGNAL</span><span class="art-label label-right">HIGH SIGNAL</span><span class="art-caption">THE SPACE<br>BETWEEN US</span></section></main>`, 'PLAY')
   app.querySelector('[data-action="new"]')?.addEventListener('click', () => { state.screen = 'host'; state.code = ''; state.players = []; state.playerName = ''; render() })
   app.querySelector('[data-action="join"]')?.addEventListener('click', () => { state.screen = 'join'; render() })
+}
+
+function renderHowItWorks() {
+  frame(`<main class="setup-page how-page"><div class="page-heading"><p class="eyebrow">HOW IT WORKS</p><h1>Read the room.<br>Guess the wavelength.</h1><p>Wavelength is a party game about seeing eye to eye. One player gives a clue, everyone else guesses where it lands — the closer the room lands together, the more everyone scores.</p></div><section class="how-steps"><div class="how-step"><span class="how-number">01</span><div><h3>Create or join a room</h3><p>One player hosts a new room and shares the 4-letter code. Everyone else joins with their name and that code, then waits in the lobby until the host starts.</p></div></div><div class="how-step"><span class="how-number">02</span><div><h3>One player becomes the Psychic</h3><p>Each round a new player is handed the Psychic role. Only the Psychic can see the hidden target hiding somewhere along the 0°–180° dial.</p></div></div><div class="how-step"><span class="how-number">03</span><div><h3>The Psychic sets the spectrum</h3><p>They pick a category and label the two ends of the dial — like "Couch potato" at 0° and "Action hero" at 180° — then write one short clue meant to describe where the hidden target sits.</p></div></div><div class="how-step"><span class="how-number">04</span><div><h3>Guessers place their pin</h3><p>Everyone else reads the clue and drags the needle to where they think the target is hiding. No discussion — just your gut read on the Psychic's clue.</p></div></div><div class="how-step"><span class="how-number">05</span><div><h3>Reveal and score</h3><p>The dial opens up to show the real target and every Guesser's pin. The closer your pin lands, the more points you earn.</p></div></div></section><section class="how-scoring"><p class="eyebrow">SCORING</p><div class="scoring-grid"><div class="scoring-row"><b>5 PTS</b><span>within 5°</span></div><div class="scoring-row"><b>3 PTS</b><span>within 15°</span></div><div class="scoring-row"><b>1 PT</b><span>within 25°</span></div><div class="scoring-row"><b>0 PTS</b><span>anything further</span></div></div><p class="how-note">The Psychic doesn't guess — instead they score the total of every Guesser's points that round. A clue that lands for the whole room pays off big, so read the room, not just the target.</p></section><section class="how-footer-note"><p class="eyebrow">ROUNDS &amp; WINNING</p><p>The Psychic role rotates so everyone gets a turn. After each player has been Psychic three times, the game ends and whoever has the most points wins.</p><button class="button button-primary" data-action="home">START PLAYING <span>→</span></button></section></main>`, 'HOW IT WORKS')
 }
 
 function renderHostName() {
@@ -55,7 +64,7 @@ function renderJoin() {
 }
 
 function renderLobby() {
-  const playerRows = state.players.map((player) => `<div><span class="player-badge">${escapeHtml(player.name.slice(0, 2).toUpperCase())}</span><span>${escapeHtml(player.name)} <small>READY</small></span><i>IN ROOM</i></div>`).join('')
+  const playerRows = state.players.map((player) => `<div><span>${escapeHtml(player.name)} <small>READY</small></span><i>IN ROOM</i></div>`).join('')
   const isHost = state.players[0]?.name === state.playerName
   frame(`<main class="setup-page"><div class="page-heading"><p class="eyebrow">${isHost ? 'ROOM CREATED' : 'WAITING ROOM'}</p><h1>${isHost ? 'Your room is ready.' : 'You are in.'}</h1><p>${isHost ? 'Share the code, then start when everyone has joined.' : 'The host will start the round when everyone has joined.'}</p></div><div class="setup-layout"><section class="room-preview lobby-room"><p class="eyebrow">ROOM CODE · ${state.players.length} PLAYER${state.players.length === 1 ? '' : 'S'}</p><div class="room-code">${state.code}</div><p>Share this code with anyone else joining.</p><div class="player-list">${playerRows}</div></section><aside class="room-preview lobby-status"><p class="eyebrow">YOUR STATUS</p><h2>${isHost ? 'Host' : 'Waiting for the host'}</h2><p>${escapeHtml(state.playerName)}, you are in the lobby. Your role will be assigned when the round begins.</p><span class="live-dot"></span> CONNECTED${isHost ? '<button class="button button-primary full lobby-start" data-action="begin">START ROUND <span>→</span></button>' : ''}</aside></div></main>`, 'LOBBY')
   app.querySelector('[data-action="begin"]')?.addEventListener('click', () => { sendServer({ type: 'start_round', code: state.code }) })
